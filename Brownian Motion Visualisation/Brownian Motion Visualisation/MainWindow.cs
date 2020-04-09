@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,7 +14,6 @@ namespace Brownian_Motion_Visualisation
 {
     public partial class MainWindow : Form
     {
-        private Thread[] _threads;
         public MainWindow()
         {
             InitializeComponent();
@@ -42,11 +41,14 @@ namespace Brownian_Motion_Visualisation
              * Она восстанавливается по завершению всего движения, но это же все-равно ненормально. Это можно убрать как-то?
              * 4) Так же видно что форма квадратная. Это можно изменить? В реализации класса Particle я пытался это убрать, но не вышло.
              */
-            var thread1 = new Thread(ControlExistingMolecule);
-            thread1.Start();
 
-            var thread2 = new Thread(ControlNewMolecule);
-            thread2.Start();
+            //класс Thread не очень хорошо работает в оконных приложениях
+            //в C# есть несколько способов организации парраллельных вычислений, например, Task Parallel Library
+            //Task - задача, запускаемая в одном из потоков пула потоков
+            //эта часть https://metanit.com/sharp/tutorial/12.5.php может Вам
+            //понадобиться для отмены задачи
+            var ControlExistingMoleculeTask = Task.Run(() => ControlExistingMolecule());
+            var ControlNewMoleculeTask = Task.Run(() => ControlNewMolecule());
         }
         public void TempBar_Scroll(object sender, EventArgs e)
         {
@@ -55,31 +57,22 @@ namespace Brownian_Motion_Visualisation
 
         public void ControlExistingMolecule()
         {
-            if (this.InvokeRequired) this.Invoke(new MethodInvoker(ControlExistingMolecule));
-            else
+            while (true)
             {
-                for (int i = 0; i < 300; ++i)
-                {
-                    ExistingMolecule.MoveParticle();
-                    Thread.Yield(); // это должно передать управление другому потоку, но ничего не меняется.
-                    Thread.Sleep(10);
-                }
+                Thread.Sleep(10);
+                ExistingMolecule.Invoke(new MethodInvoker(() => { ExistingMolecule.MoveParticle(); }));
             }
         }
         public void ControlNewMolecule()
         {
-            if (this.InvokeRequired) this.Invoke(new MethodInvoker(ControlNewMolecule));
-            else
+            var mol = new Particle();
+            mol.Location = new Point(2, 2); //если взять меньше 2, молекула будет "дрожать" на месте
+            //причина - в реализации метода MoveParticle
+            this.Invoke(new MethodInvoker(() => { this.Controls.Add(mol); }));
+            while (true)
             {
-
-                var mol = new Particle();
-                this.Controls.Add(mol);
-                for (int i = 0; i < 1000; ++i)
-                {
-                    mol.MoveParticle();
-                    Thread.Yield(); // это должно передать управление другому потоку, но ничего не меняется.
-                    Thread.Sleep(10);
-                }
+                Thread.Sleep(10);
+                mol.Invoke(new MethodInvoker(() => { mol.MoveParticle(); }));
             }
         }
     }
