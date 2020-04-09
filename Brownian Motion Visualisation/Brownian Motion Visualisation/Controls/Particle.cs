@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -36,9 +36,7 @@ namespace Brownian_Motion_Visualisation.Forms
              * this.Region = rgn;
              * this.BorderStyle = BorderStyle.None;
             */
-
-
-
+                       
             this.ClientSize = new Size(new Point(ParticleSize, ParticleSize));
             this.Location = new Point(startPosX, startPosY);
         }
@@ -48,13 +46,19 @@ namespace Brownian_Motion_Visualisation.Forms
             this.ClientSize = new Size(new Point(ParticleSize + 2, ParticleSize + 2));
             this.Location = new Point(0, 0);
             this.Paint += new PaintEventHandler(PaintParticle);
+
+            //это работает :)
+            GraphicsPath path = new GraphicsPath();
+            path.AddEllipse(this.ClientRectangle);
+            Region rgn = new Region(path);
+            this.Region = rgn;
+            this.BorderStyle = BorderStyle.None;
         }
 
         protected override void OnPaint(PaintEventArgs e) => PaintParticle(this, e);
         private void PaintParticle(object sender, PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
             e.Graphics.Clear(this.BackColor);
 
             e.Graphics.FillEllipse(Brushes.Red,
@@ -64,7 +68,6 @@ namespace Brownian_Motion_Visualisation.Forms
             e.Graphics.DrawEllipse(Pens.Black,
                 0, 0,
                 ParticleSize, ParticleSize);
-
         }
 
         public void MoveParticle()
